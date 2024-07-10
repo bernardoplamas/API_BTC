@@ -1,0 +1,7 @@
+asyncio
+python-telegram-bot
+yfinance
+datetime
+telegram
+schedule
+pytz
