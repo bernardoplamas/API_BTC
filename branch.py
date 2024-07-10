@@ -2,6 +2,7 @@ import asyncio
 from telegram import Bot
 import yfinance as yf
 import datetime
+import pytz  # Para lidar com fusos horários
 import schedule
 import time
 
@@ -9,6 +10,7 @@ import time
 TELEGRAM_TOKEN = ''
 CHAT_ID = ''
 bot = Bot(token=TELEGRAM_TOKEN)
+
 
 async def fetch_and_send_data():
     start_date = datetime.datetime(2010, 1, 1)
@@ -34,9 +36,17 @@ async def fetch_and_send_data():
     )
     await bot.send_message(chat_id=CHAT_ID, text=message)
 
+
 async def main():
-    # Agendar a tarefa para ser executada a cada 5 minutos
-    schedule.every(5).minutes.do(lambda: asyncio.create_task(fetch_and_send_data()))
+    # Calcular o horário para 9 AM horário de Brasília
+    brasilia_tz = pytz.timezone('America/Sao_Paulo')
+    next_run_time = datetime.datetime.now(brasilia_tz).replace(hour=9, minute=0, second=0, microsecond=0)
+
+    # Converter o horário para string no formato 'HH:MM'
+    next_run_time_str = next_run_time.time().strftime('%H:%M')
+
+    # Agendar a tarefa para ser executada diariamente às 9 da manhã em Brasília
+    schedule.every().day.at(next_run_time_str).do(lambda: asyncio.create_task(fetch_and_send_data()))
 
     # Loop principal para continuar agendando tarefas
     try:
@@ -46,8 +56,10 @@ async def main():
     except KeyboardInterrupt:
         print("\nInterrompido pelo usuário. Saindo...")
 
+
 def run_bot():
     asyncio.run(main())
+
 
 if __name__ == "__main__":
     run_bot()
